@@ -15,6 +15,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, roc_curve, auc, precision_recall_curve
 )
+from sklearn.preprocessing import MinMaxScaler
 import lightgbm as lgb
 from joblib import dump, load
 import shap
@@ -111,50 +112,81 @@ class LightGBMTrainer:
         
         return pd.DataFrame(metrics)
     
-    def prepare_features(self, df: pd.DataFrame, feature_set: str) -> pd.DataFrame:
+    def prepare_features(self, df: pd.DataFrame, feature_set: str, scaler: MinMaxScaler = None, fit_scaler: bool = True) -> Tuple[pd.DataFrame, MinMaxScaler]:
         """
-        Prepare features by removing specified columns and normalizing
+        Prepare features by selecting specified columns and scaling
         
         Args:
             df: Input DataFrame
             feature_set: Name of feature set to use
+            scaler: Pre-fitted MinMaxScaler (for test data)
+            fit_scaler: Whether to fit the scaler (True for train, False for test)
             
         Returns:
-            Normalized feature DataFrame
+            Tuple of (normalized feature DataFrame, fitted scaler)
         """
         if feature_set not in self.x_features:
             raise ValueError(f"Feature set '{feature_set}' not found in configuration")
         
-        # remove_features = self.drop_features[feature_set]
-        # X = df.drop(remove_features, axis=1)
-        
         X = df[self.x_features[feature_set]].copy()
+        
+        # Initialize scaler if not provided
+        if scaler is None:
+            scaler = MinMaxScaler()
+        
+        if fit_scaler:
+            # Fit and transform for training data
+            X_scaled = scaler.fit_transform(X)
+        else:
+            # Only transform for test data (using scaler fitted on training data)
+            X_scaled = scaler.transform(X)
+        
+        # Convert back to DataFrame with original column names
+        X_scaled_df = pd.DataFrame(X_scaled, columns=X.columns, index=X.index)
+        
+        return X_scaled_df, scaler
 
-        for column in X.columns:
-            max_val = X[column].max()
-            min_val = X[column].min()
-            if max_val == min_val:
-                print(f"Warning: Column {column} has no variation and will be set to 0")
-                X[column] = 0
-            else:
-                X[column] = (X[column] - min_val) / (max_val - min_val)
-
-        return X
     
-    def find_optimal_threshold(self, y_test: np.ndarray, y_pred_prob: np.ndarray) -> float:
+    def find_optimal_threshold_cv(self, X: pd.DataFrame, y: pd.Series, model_params: Dict, cv_folds: int = 5) -> float:
         """
-        Find optimal classification threshold using Youden's J statistic
+        Find optimal classification threshold using cross-validation
         
         Args:
-            y_test: True labels
-            y_pred_prob: Prediction probabilities
+            X: Feature data
+            y: Target labels
+            model_params: Model parameters for LightGBM
+            cv_folds: Number of cross-validation folds
             
         Returns:
             Optimal threshold value
         """
-        fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
-        threshold = thresholds[np.argmax(tpr - fpr)]
-        return threshold
+        from sklearn.model_selection import StratifiedKFold
+        
+        skf = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=self.model_params.get('seed', 711))
+        thresholds = []
+        
+        for train_idx, val_idx in skf.split(X, y):
+            X_train_cv, X_val_cv = X.iloc[train_idx], X.iloc[val_idx]
+            y_train_cv, y_val_cv = y.iloc[train_idx], y.iloc[val_idx]
+            
+            # Train model on CV training fold
+            train_data_cv = lgb.Dataset(X_train_cv, label=y_train_cv)
+            model_cv = lgb.train(
+                model_params,
+                train_data_cv,
+                num_boost_round=self.training_params.get('num_rounds', 100),
+            )
+            
+            # Get predictions on validation fold
+            y_pred_prob_cv = model_cv.predict(X_val_cv)
+            
+            # Find optimal threshold for this fold using Youden's J statistic
+            fpr, tpr, thresh = roc_curve(y_val_cv, y_pred_prob_cv)
+            optimal_idx = np.argmax(tpr - fpr)
+            thresholds.append(thresh[optimal_idx])
+        
+        # Return mean threshold across all folds
+        return np.mean(thresholds)
     
     def train_model(self, title: str, query_condition: str, target_column: str, 
                    feature_set: str = 'default') -> Dict[str, Any]:
@@ -178,34 +210,44 @@ class LightGBMTrainer:
         query = f'SELECT * FROM {self.table_name} {query_condition}'
         df = self.execute_query_pandas(query)
         
-        # Prepare features and target
-        X = self.prepare_features(df, feature_set)
+        # Select features (but don't scale yet)
+        if feature_set not in self.x_features:
+            raise ValueError(f"Feature set '{feature_set}' not found in configuration")
+        
+        X = df[self.x_features[feature_set]].copy()
         y = df[target_column]
         
         # Split data
         test_size = self.training_params.get('test_size', 0.3)
         X_train, X_test, y_train, y_test = model_selection.train_test_split(
-            X, y, test_size=test_size, stratify=y, random_state=42
+            X, y, test_size=test_size, stratify=y, random_state=self.model_params.get('seed', 711)
         )
         
-        # Create LightGBM dataset
-        train_data = lgb.Dataset(X_train, label=y_train)
+        # Scale features (fit on train, transform both train and test)
+        X_train_scaled, scaler = self.prepare_features(
+            pd.DataFrame(X_train), feature_set, fit_scaler=True
+        )
+        X_test_scaled, _ = self.prepare_features(
+            pd.DataFrame(X_test), feature_set, scaler=scaler, fit_scaler=False
+        )
         
-        # Train model
+        # Find optimal threshold using cross-validation on training data
+        print("Finding optimal threshold using cross-validation...")
+        threshold = self.find_optimal_threshold_cv(X_train_scaled, y_train, self.model_params)
+        print(f'Optimal threshold (from CV): {threshold:.4f}')
+        
+        # Create LightGBM dataset and train final model
+        train_data = lgb.Dataset(X_train_scaled, label=y_train)
+        
         model = lgb.train(
             self.model_params,
             train_data,
             num_boost_round=self.training_params.get('num_rounds', 100)
         )
         
-        # Make predictions
-        y_pred_prob = model.predict(X_test)
-        
-        # Find optimal threshold and make binary predictions
-        threshold = self.find_optimal_threshold(y_test, y_pred_prob)
+        # Make predictions on test set
+        y_pred_prob = model.predict(X_test_scaled)
         y_pred_binary = (y_pred_prob >= threshold).astype(int)
-        
-        print(f'Optimal threshold: {threshold:.4f}')
         
         # Calculate metrics
         metrics_df = self.get_classification_metrics(y_test, y_pred_binary, y_pred_prob)
@@ -214,20 +256,24 @@ class LightGBMTrainer:
         # Save model if specified
         if self.config.get('save_model', False):
             model_filename = f"LGBM_{title.replace(' ', '_')}.pkl"
+            scaler_filename = f"Scaler_{title.replace(' ', '_')}.pkl"
             dump(model, model_filename)
+            #dump(scaler, scaler_filename) # Export scaler if desired
             print(f"Model saved as: {model_filename}")
+            # print(f"Scaler saved as: {scaler_filename}")
         
         return {
             'model': model,
+            'scaler': scaler,
             'metrics': metrics_df,
             'threshold': threshold,
-            'X_test': X_test,
+            'X_test': X_test_scaled,
             'y_test': y_test,
             'y_pred_prob': y_pred_prob,
             'y_pred_binary': y_pred_binary
         }
     
-    def generate_shap_plots(self, model, X_data: pd.DataFrame, save_plots: bool = False):
+    def generate_shap_plots(self, title, model, X_data: pd.DataFrame, save_plots: bool = False):
         """
         Generate SHAP plots for model interpretation
         
@@ -248,15 +294,39 @@ class LightGBMTrainer:
         else:
             shap_values_plot = shap_values
         
-        shap.summary_plot(shap_values_plot, X_data, plot_type="dot", show=not save_plots)
+        shap.summary_plot(shap_values_plot, X_data, plot_type="dot", max_display=10, show=not save_plots)
         if save_plots:
-            plt.savefig("shap_summary_plot.png", dpi=300, bbox_inches='tight')
+            # Get the current figure and axes objects
+            fig, ax = plt.gcf(), plt.gca()
+
+            # Modifying main plot parameters
+            ax.tick_params(labelsize=12)
+            ax.set_xlabel("SHAP value (impact on model output)", fontsize=12)
+
+            # Get colorbar
+            cb_ax = fig.axes[1] 
+
+            # Modifying color bar parameters
+            cb_ax.tick_params(labelsize=14)
+            cb_ax.set_ylabel("Feature value", fontsize=12)
+
+            ax.yaxis.grid(linestyle='--', linewidth='.6', color='grey')
+
+            ax.tick_params(axis='x', colors='black')
+            ax.tick_params(axis='y', colors='black')
+            plt.savefig(f"{title.replace(' ', '_')}shap_summary_plot.png", format = "png", dpi=300, bbox_inches='tight')
             plt.close()
         
-        # Feature importance plot
-        shap.summary_plot(shap_values_plot, X_data, plot_type="bar", show=not save_plots)
+        # Feature importance bar plot
+        shap.summary_plot(shap_values_plot, X_data, plot_type="bar", color='#9fb2d1',max_display=10, show=not save_plots)
         if save_plots:
-            plt.savefig("shap_importance_plot.png", dpi=300, bbox_inches='tight')
+            ax = plt.gca()
+            ax.tick_params(labelsize=12)
+
+            ax.xaxis.label.set_fontsize(12)
+            ax.yaxis.grid(linestyle='--', linewidth='0.6', color='grey')
+            ax.tick_params(axis='y', labelsize=16, colors='black')  # Increase Y-axis label size
+            plt.savefig(f"{title.replace(' ', '_')}shap_barplot.png", format = "png", dpi=300, bbox_inches='tight')
             plt.close()
     
     def plot_feature_importance(self, model, max_features: int = 25):
@@ -334,15 +404,17 @@ def create_default_config() -> Dict[str, Any]:
             'boosting_type': 'gbdt',
             'num_leaves': 127,
             'learning_rate': 0.1,
-            'verbose': -1
+            'verbose': -1,
+            # Control randomness
+            'seed': 711,
         },
         'training_params': {
             'num_rounds': 100,
             'test_size': 0.3
         },
-        'save_model': False,
+        'save_model': True,
         'plot_importance': False,
-        'generate_shap': False
+        'generate_shap': True
     }
 
 
@@ -358,18 +430,24 @@ def main():
     
     # Define training scenarios with topics
     scenarios = [
-        {
-            'title': 'Combined_DetectHumanProp',
-            'query_condition': 'WHERE WC >= 100 AND model LIKE "human"',
-            'target_column': 'Label',
-            'feature_set': 'withPunc'
-        },
         # {
-        #     'title': 'Combined_DetectAI_GPT35_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model IN ("gpt-3.5-turbo", "human")',
-        #     'target_column': 'AI',
+        #     'title': 'Combined_DetectHumanProp',
+        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "human"',
+        #     'target_column': 'Label',
+        #     'feature_set': 'withPunc'
+        # },
+        # {
+        #     'title': 'Combined_DetectHumanProp_noPunc',
+        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "human"',
+        #     'target_column': 'Label',
         #     'feature_set': 'noPunc'
         # },
+        {
+            'title': 'Combined_DetectAI_GPT35_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model IN ("gpt-3.5-turbo", "human")',
+            'target_column': 'AI',
+            'feature_set': 'noPunc'
+        },
         # {
         #     'title': 'Combined_DetectAIProp_GPT35',
         #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo"',
@@ -567,6 +645,7 @@ def main():
         # Generate SHAP plots if enabled
         if config.get('generate_shap', False):
             trainer.generate_shap_plots(
+                scenario['title'],
                 result['model'],
                 result['X_test'],
                 save_plots=True
