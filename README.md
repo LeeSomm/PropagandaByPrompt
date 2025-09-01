@@ -18,6 +18,9 @@ This repository contains the code and analysis notebooks accompanying the paper 
   - Implements feature selection and normalization
   - Produces model performance metrics
 
+- **hyperparameter_grid_search.py**: Hyperparameter optimization script for propaganda detection models
+  - Performs grid search on hyperparameters for Shallow & Deep Neural Networks, SVM, and LightGBM models
+
 ### Analysis Notebooks
 
 - **Model_Analysis_Notebook.ipynb**: Primary analysis notebook for model interpretation
@@ -35,6 +38,7 @@ The `models/` directory contains trained LightGBM models (.pkl files) for:
 - Different GPT versions (GPT-3.5, GPT-4o, GPT-4.1)
 
 ## Requirements
+Recommended Python Version: 3.11.6
 
 Required Python packages are listed in `requirements.txt`. Install using:
 ```bash

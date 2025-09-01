@@ -405,7 +405,7 @@ def create_default_config() -> Dict[str, Any]:
             'num_leaves': 127,
             'learning_rate': 0.1,
             'verbose': -1,
-            # Control randomness
+            # Ensure reproducibility
             'seed': 711,
         },
         'training_params': {
@@ -442,192 +442,192 @@ def main():
         #     'target_column': 'Label',
         #     'feature_set': 'noPunc'
         # },
+        # {
+        #     'title': 'Combined_DetectAI_GPT35_noPunc',
+        #     'query_condition': 'WHERE WC >= 100 AND model IN ("gpt-3.5-turbo", "human")',
+        #     'target_column': 'AI',
+        #     'feature_set': 'noPunc'
+        # },
         {
-            'title': 'Combined_DetectAI_GPT35_noPunc',
-            'query_condition': 'WHERE WC >= 100 AND model IN ("gpt-3.5-turbo", "human")',
-            'target_column': 'AI',
+            'title': 'Combined_DetectAIProp_GPT35',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'Combined_DetectAIProp_GPT35_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo"',
+            'target_column': 'Label',
             'feature_set': 'noPunc'
         },
-        # {
-        #     'title': 'Combined_DetectAIProp_GPT35',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'Combined_DetectAIProp_GPT35_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'Combined_DetectAIProp_GPT4o',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'Combined_DetectAIProp_GPT4o_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'Combined_DetectAIProp_GPT41',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'Combined_DetectAIProp_GPT41_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'climate_DetectAIProp_GPT35',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "climate"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'climate_DetectAIProp_GPT35_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "climate"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'climate_DetectAIProp_GPT4o',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "climate"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'climate_DetectAIProp_GPT4o_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "climate"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'climate_DetectAIProp_GPT41',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "climate"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'climate_DetectAIProp_GPT41_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "climate"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'covid_DetectAIProp_GPT35',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "covid"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'covid_DetectAIProp_GPT35_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "covid"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'covid_DetectAIProp_GPT4o',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "covid"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'covid_DetectAIProp_GPT4o_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "covid"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'covid_DetectAIProp_GPT41',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "covid"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'covid_DetectAIProp_GPT41_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "covid"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'capitolriot_DetectAIProp_GPT35',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "capitolriot"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'capitolriot_DetectAIProp_GPT35_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "capitolriot"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'capitolriot_DetectAIProp_GPT4o',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "capitolriot"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'capitolriot_DetectAIProp_GPT4o_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "capitolriot"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'capitolriot_DetectAIProp_GPT41',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "capitolriot"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'capitolriot_DetectAIProp_GPT41_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "capitolriot"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'lgbt_DetectAIProp_GPT35',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "lgbt"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'lgbt_DetectAIProp_GPT35_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "lgbt"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'lgbt_DetectAIProp_GPT4o',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "lgbt"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'lgbt_DetectAIProp_GPT4o_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "lgbt"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
-        # {
-        #     'title': 'lgbt_DetectAIProp_GPT41',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "lgbt"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'withPunc'
-        # },
-        # {
-        #     'title': 'lgbt_DetectAIProp_GPT41_noPunc',
-        #     'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "lgbt"',
-        #     'target_column': 'Label',
-        #     'feature_set': 'noPunc'
-        # },
+        {
+            'title': 'Combined_DetectAIProp_GPT4o',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'Combined_DetectAIProp_GPT4o_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'Combined_DetectAIProp_GPT41',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'Combined_DetectAIProp_GPT41_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'climate_DetectAIProp_GPT35',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "climate"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'climate_DetectAIProp_GPT35_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "climate"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'climate_DetectAIProp_GPT4o',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "climate"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'climate_DetectAIProp_GPT4o_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "climate"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'climate_DetectAIProp_GPT41',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "climate"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'climate_DetectAIProp_GPT41_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "climate"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'covid_DetectAIProp_GPT35',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "covid"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'covid_DetectAIProp_GPT35_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "covid"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'covid_DetectAIProp_GPT4o',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "covid"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'covid_DetectAIProp_GPT4o_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "covid"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'covid_DetectAIProp_GPT41',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "covid"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'covid_DetectAIProp_GPT41_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "covid"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'capitolriot_DetectAIProp_GPT35',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "capitolriot"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'capitolriot_DetectAIProp_GPT35_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "capitolriot"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'capitolriot_DetectAIProp_GPT4o',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "capitolriot"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'capitolriot_DetectAIProp_GPT4o_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "capitolriot"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'capitolriot_DetectAIProp_GPT41',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "capitolriot"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'capitolriot_DetectAIProp_GPT41_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "capitolriot"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'lgbt_DetectAIProp_GPT35',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "lgbt"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'lgbt_DetectAIProp_GPT35_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-3.5-turbo" AND topic LIKE "lgbt"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'lgbt_DetectAIProp_GPT4o',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "lgbt"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'lgbt_DetectAIProp_GPT4o_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4o" AND topic LIKE "lgbt"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
+        {
+            'title': 'lgbt_DetectAIProp_GPT41',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "lgbt"',
+            'target_column': 'Label',
+            'feature_set': 'withPunc'
+        },
+        {
+            'title': 'lgbt_DetectAIProp_GPT41_noPunc',
+            'query_condition': 'WHERE WC >= 100 AND model LIKE "gpt-4.1" AND topic LIKE "lgbt"',
+            'target_column': 'Label',
+            'feature_set': 'noPunc'
+        },
     ]
 
     
